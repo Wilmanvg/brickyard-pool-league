@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { playerPublicSelect } from "@/lib/player-select";
 import { AddPlayerForm } from "./add-player-form";
@@ -33,7 +34,12 @@ export default async function PlayersPage() {
                 key={p.id}
                 className="flex items-center justify-between gap-4 px-4 py-3"
               >
-                <span className="font-medium">{p.name}</span>
+                <Link
+                  href={`/players/${p.id}`}
+                  className="font-medium text-[var(--accent)] hover:underline"
+                >
+                  {p.name}
+                </Link>
                 <span className="tabular-nums text-sm text-[var(--muted)]">
                   Elo {p.eloRating}
                 </span>

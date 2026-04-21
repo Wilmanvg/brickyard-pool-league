@@ -16,6 +16,8 @@ export async function finalizePendingMatch(
   ]);
 
   const [newA, newB] = updateElo(a.eloRating, b.eloRating, outcome);
+  const eloDeltaA = newA - a.eloRating;
+  const eloDeltaB = newB - b.eloRating;
 
   const aWins = outcome === "WIN_A" ? 1 : 0;
   const aLosses = outcome === "WIN_B" ? 1 : 0;
@@ -47,6 +49,11 @@ export async function finalizePendingMatch(
 
   await tx.match.update({
     where: { id: matchId },
-    data: { status: "CONFIRMED", confirmedAt: new Date() },
+    data: {
+      status: "CONFIRMED",
+      confirmedAt: new Date(),
+      eloDeltaA,
+      eloDeltaB,
+    },
   });
 }

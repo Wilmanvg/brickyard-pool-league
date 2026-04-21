@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { PendingMatches } from "@/components/pending-matches";
 import { prisma } from "@/lib/prisma";
+import { playerPublicSelect } from "@/lib/player-select";
 import { DEFAULT_ELO, K_FACTOR } from "@/lib/elo";
 
 export const dynamic = "force-dynamic";
@@ -7,6 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   const players = await prisma.player.findMany({
     orderBy: [{ eloRating: "desc" }, { name: "asc" }],
+    select: playerPublicSelect,
   });
 
   return (
@@ -28,9 +31,9 @@ export default async function HomePage() {
       {players.length === 0 ? (
         <p className="rounded-lg border border-dashed border-[var(--border)] p-8 text-center text-[var(--muted)]">
           No players yet. Add names on the{" "}
-          <a href="/players" className="text-[var(--accent)] underline">
+          <Link href="/players" className="text-[var(--accent)] underline">
             Players
-          </a>{" "}
+          </Link>{" "}
           page, then log a match.
         </p>
       ) : (
@@ -53,7 +56,14 @@ export default async function HomePage() {
                   className="border-t border-[var(--border)] hover:bg-[var(--card)]/50"
                 >
                   <td className="px-4 py-3 text-[var(--muted)]">{i + 1}</td>
-                  <td className="px-4 py-3 font-medium">{p.name}</td>
+                  <td className="px-4 py-3 font-medium">
+                    <Link
+                      href={`/players/${p.id}`}
+                      className="text-[var(--accent)] hover:underline"
+                    >
+                      {p.name}
+                    </Link>
+                  </td>
                   <td className="px-4 py-3 tabular-nums">{p.eloRating}</td>
                   <td className="hidden px-4 py-3 tabular-nums text-[var(--muted)] sm:table-cell">
                     {p.wins}W – {p.losses}L

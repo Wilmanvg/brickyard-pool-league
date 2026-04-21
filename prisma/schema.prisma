@@ -36,6 +36,9 @@ model Match {
   status     String    @default("PENDING")
   loggedById String
   confirmedAt DateTime?
+  /// Elo change for player A / B for this match (set when confirmed; null for legacy rows)
+  eloDeltaA  Int?
+  eloDeltaB  Int?
 
   playerA  Player @relation("PlayerAMatches", fields: [playerAId], references: [id], onDelete: Cascade)
   playerB  Player @relation("PlayerBMatches", fields: [playerBId], references: [id], onDelete: Cascade)
