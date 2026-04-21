@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -41,9 +42,9 @@ export function LoginForm({ players }: { players: Player[] }) {
     return (
       <p className="text-[var(--muted)]">
         Add players first, each with a PIN, on the{" "}
-        <a href="/players" className="text-[var(--accent)] underline">
+        <Link href="/players" className="text-[var(--accent)] underline">
           Players
-        </a>{" "}
+        </Link>{" "}
         page.
       </p>
     );
