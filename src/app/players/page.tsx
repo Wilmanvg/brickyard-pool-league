@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { playerPublicSelect } from "@/lib/player-select";
 import { AddPlayerForm } from "./add-player-form";
 
 export const dynamic = "force-dynamic";
@@ -6,6 +7,7 @@ export const dynamic = "force-dynamic";
 export default async function PlayersPage() {
   const players = await prisma.player.findMany({
     orderBy: { name: "asc" },
+    select: playerPublicSelect,
   });
 
   return (
@@ -13,7 +15,8 @@ export default async function PlayersPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Players</h1>
         <p className="mt-1 text-sm text-[var(--muted)]">
-          Add everyone who plays in your weekly games.
+          Each player chooses a PIN (min 4 characters). PINs are used to sign in
+          and to confirm or dispute match results.
         </p>
       </div>
 

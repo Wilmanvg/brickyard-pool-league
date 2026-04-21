@@ -35,10 +35,20 @@ export function MatchForm({ players }: { players: Player[] }) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
+        if (res.status === 401) {
+          setError(
+            `${data.error ?? "Sign in required."} Open /login and sign in as the player logging this match.`,
+          );
+          return;
+        }
         setError(data.error ?? "Could not save match");
         return;
       }
-      setSuccess("Match saved. Ratings updated.");
+      setSuccess(
+        typeof data.message === "string"
+          ? data.message
+          : "Match submitted. Opponent must confirm before Elo updates.",
+      );
       setNotes("");
       setWinnerId("");
       setIsDraw(false);

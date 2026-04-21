@@ -16,7 +16,7 @@ export async function GET(request: Request) {
   const { playerAId, playerBId } = orderedPair(idA, idB);
 
   const matches = await prisma.match.findMany({
-    where: { playerAId, playerBId },
+    where: { playerAId, playerBId, status: "CONFIRMED" },
   });
 
   let winsForOrderedA = 0;

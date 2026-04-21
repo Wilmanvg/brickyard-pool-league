@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { hashPin, validatePinFormat } from "@/lib/pin";
+import { playerPublicSelect } from "@/lib/player-select";
 
 export async function GET() {
   const players = await prisma.player.findMany({
     orderBy: [{ eloRating: "desc" }, { name: "asc" }],
+    select: playerPublicSelect,
   });
   return NextResponse.json(players);
 }
@@ -12,12 +15,19 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const name = String(body.name ?? "").trim();
+    const pin = String(body.pin ?? "");
+
     if (!name) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
+    const pinErr = validatePinFormat(pin);
+    if (pinErr) {
+      return NextResponse.json({ error: pinErr }, { status: 400 });
+    }
 
     const player = await prisma.player.create({
-      data: { name },
+      data: { name, pinHash: hashPin(pin) },
+      select: playerPublicSelect,
     });
     return NextResponse.json(player, { status: 201 });
   } catch (e: unknown) {

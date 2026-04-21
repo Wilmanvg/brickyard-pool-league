@@ -1,20 +1,24 @@
 # Pool League
 
-A small Next.js app to track weekly pool games between friends: **Elo ratings**, **W/L/D records**, and **head-to-head** stats.
+Next.js app for weekly pool games: **per-player PINs**, **match confirmation** before Elo updates, **leaderboard**, and **head-to-head** stats.
+
+## Flow
+
+1. **Players** — each person gets a name and a **PIN** (min 4 characters; stored hashed).
+2. **Login** — sign in with player + PIN (session cookie, ~2 weeks).
+3. **Log match** — you must be signed in as one of the two players. The match is **pending** until the **other player confirms** (with their PIN) or **rejects** (dispute). The logger can **cancel** their own pending entry with PIN.
+4. **Home** — pending items appear at the top for sign-in users.
+5. **Leaderboard / head-to-head** — only **confirmed** matches count.
 
 ## Quick start (local)
 
-You need **PostgreSQL** and a `DATABASE_URL` (see `.env.example`).
-
-Example with Docker:
+PostgreSQL + env vars (see `.env.example`):
 
 ```bash
 docker run --name pool-pg -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=pool -p 5432:5432 -d postgres:16
 cp .env.example .env
-# Set: DATABASE_URL="postgresql://postgres:postgres@localhost:5432/pool"
+# Edit .env: DATABASE_URL and SESSION_SECRET (e.g. openssl rand -hex 32)
 ```
-
-Then:
 
 ```bash
 cd pool-league
@@ -25,30 +29,30 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-- **Players** — add everyone in your group (names must be unique).
-- **Log match** — pick two players, winner (or draw). Elo updates automatically.
-- **Leaderboard** — sorted by Elo.
-- **Head-to-head** — wins and draws between any two players.
+## Database migrations and existing data
 
-## Configuration
-
-- **Database**: **PostgreSQL** via `DATABASE_URL` in `.env`.
-- **Elo**: Default rating `1500`, K-factor `28` — edit `src/lib/elo.ts` to tune how fast ratings move.
+Migration `20250422180000_pins_pending_matches` assigns existing players (if any) the temporary PIN **`0000`** until you change it (there is no “change PIN” UI yet—add a new player or run a manual SQL update if needed).
 
 ## Railway
 
-1. In your Railway project, add a **PostgreSQL** database (New → **Database** → PostgreSQL).
-2. On your **web service** → **Variables**, add **`DATABASE_URL`**. Use **“Reference variable”** and pick the Postgres service’s `DATABASE_URL`, or paste the connection string from the DB’s **Connect** tab.
-3. Redeploy. Migrations run on **container start** (`npm start` → `prisma migrate deploy`) so they can reach `postgres.railway.internal`. The **build** step does not connect to the DB (Railway’s build network often cannot use the private DB URL).
-
-Without `DATABASE_URL`, Prisma will fail with a validation / initialization error.
+1. Add **PostgreSQL** and reference **`DATABASE_URL`** on the web service.
+2. Set **`SESSION_SECRET`** (long random string, min 16 characters) on the web service.
+3. Deploy. Migrations run at **`npm start`** (`prisma migrate deploy`).
 
 ## Security
 
-Keep dependencies current (`npm outdated`). If `npm audit` reports issues in Next.js, upgrade with `npm install next@latest eslint-config-next@latest`.
+- Never commit `.env`. Rotate `SESSION_SECRET` if leaked.
+- Keep Next.js updated (`npm audit`).
 
-## API (optional)
+## API (sketch)
 
-- `GET/POST /api/players`
-- `GET/POST /api/matches`
-- `GET /api/head-to-head?a=<id>&b=<id>`
+- `POST /api/players` — `{ name, pin }`
+- `POST /api/auth/login` — `{ playerId, pin }`
+- `POST /api/auth/logout`
+- `GET /api/auth/me`
+- `POST /api/matches` — session must be one of the two players; creates **pending** match
+- `GET /api/matches/pending` — for current session
+- `POST /api/matches/:id/confirm` — `{ pin }` (opponent)
+- `POST /api/matches/:id/reject` — `{ pin }` (opponent)
+- `POST /api/matches/:id/cancel` — `{ pin }` (logger)
+- `GET /api/head-to-head?a=&b=` — confirmed matches only

@@ -1,3 +1,4 @@
+import { PendingMatches } from "@/components/pending-matches";
 import { prisma } from "@/lib/prisma";
 import { DEFAULT_ELO, K_FACTOR } from "@/lib/elo";
 
@@ -10,6 +11,7 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-6">
+      <PendingMatches />
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Leaderboard</h1>
         <p className="mt-1 text-sm text-[var(--muted)]">
@@ -17,7 +19,9 @@ export default async function HomePage() {
           <code className="rounded bg-[var(--card)] px-1 py-0.5 text-xs">
             src/lib/elo.ts
           </code>
-          ).
+          ). Only{" "}
+          <span className="font-medium text-[var(--foreground)]">confirmed</span>{" "}
+          matches affect ratings. Pending approvals appear above.
         </p>
       </div>
 

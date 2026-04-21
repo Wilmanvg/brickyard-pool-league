@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { playerPublicSelect } from "@/lib/player-select";
 import { MatchForm } from "./match-form";
 
 export const dynamic = "force-dynamic";
@@ -6,7 +7,7 @@ export const dynamic = "force-dynamic";
 export default async function MatchPage() {
   const players = await prisma.player.findMany({
     orderBy: { name: "asc" },
-    select: { id: true, name: true },
+    select: playerPublicSelect,
   });
 
   return (
@@ -14,8 +15,8 @@ export default async function MatchPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Log a match</h1>
         <p className="mt-1 text-sm text-[var(--muted)]">
-          Winner gets Elo points from the loser (standard Elo). Draws split
-          points.
+          Sign in first. You can only log games you played in. The other player
+          must confirm before Elo updates. Draws split points once confirmed.
         </p>
       </div>
       <MatchForm players={players} />
