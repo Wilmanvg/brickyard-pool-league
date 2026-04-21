@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Player {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  eloRating     Int      @default(1500)
+  matchesPlayed Int      @default(0)
+  wins          Int      @default(0)
+  losses        Int      @default(0)
+  draws         Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  matchesAsA Match[] @relation("PlayerAMatches")
+  matchesAsB Match[] @relation("PlayerBMatches")
+}
+
+/// Stored with a stable order: playerA is always the lexicographically smaller id for the pair at insert time
+/// (computed in application code) so duplicate A-vs-B rows are easier to reason about.
+model Match {
+  id        String   @id @default(cuid())
+  playerAId String
+  playerBId String
+  /// WIN_A = player A won, WIN_B = player B won, DRAW = tie
+  outcome   String
+  playedAt  DateTime @default(now())
+  notes     String?
+
+  playerA Player @relation("PlayerAMatches", fields: [playerAId], references: [id], onDelete: Cascade)
+  playerB Player @relation("PlayerBMatches", fields: [playerBId], references: [id], onDelete: Cascade)
+
+  @@index([playerAId])
+  @@index([playerBId])
+}
