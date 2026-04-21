@@ -39,7 +39,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 1. In your Railway project, add a **PostgreSQL** database (New → **Database** → PostgreSQL).
 2. On your **web service** → **Variables**, add **`DATABASE_URL`**. Use **“Reference variable”** and pick the Postgres service’s `DATABASE_URL`, or paste the connection string from the DB’s **Connect** tab.
-3. Redeploy. The build runs `prisma migrate deploy`, which creates tables on first deploy.
+3. Redeploy. Migrations run on **container start** (`npm start` → `prisma migrate deploy`) so they can reach `postgres.railway.internal`. The **build** step does not connect to the DB (Railway’s build network often cannot use the private DB URL).
 
 Without `DATABASE_URL`, Prisma will fail with a validation / initialization error.
 
