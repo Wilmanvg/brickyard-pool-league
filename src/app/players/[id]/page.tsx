@@ -124,6 +124,7 @@ export default async function PlayerProfilePage({
                     {r.playedAt.toLocaleString(undefined, {
                       dateStyle: "medium",
                       timeStyle: "short",
+                      timeZone: "America/Los_Angeles",
                     })}
                   </td>
                   <td className="px-4 py-3">

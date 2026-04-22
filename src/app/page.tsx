@@ -44,9 +44,7 @@ export default async function HomePage() {
                 <th className="px-4 py-3 font-medium">#</th>
                 <th className="px-4 py-3 font-medium">Player</th>
                 <th className="px-4 py-3 font-medium">Elo</th>
-                <th className="hidden px-4 py-3 font-medium sm:table-cell">
-                  Record
-                </th>
+                <th className="px-4 py-3 font-medium">Record</th>
               </tr>
             </thead>
             <tbody>
@@ -65,7 +63,7 @@ export default async function HomePage() {
                     </Link>
                   </td>
                   <td className="px-4 py-3 tabular-nums">{p.eloRating}</td>
-                  <td className="hidden px-4 py-3 tabular-nums text-[var(--muted)] sm:table-cell">
+                  <td className="px-4 py-3 tabular-nums text-[var(--muted)]">
                     {p.wins}W – {p.losses}L
                     {p.draws > 0 ? ` – ${p.draws}D` : ""}
                   </td>
