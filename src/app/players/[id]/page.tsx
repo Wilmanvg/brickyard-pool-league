@@ -21,6 +21,13 @@ export async function generateMetadata({
 
 type Outcome = "WIN_A" | "WIN_B" | "DRAW";
 
+function didWin(match: { playerAId: string; outcome: string }, viewerId: string) {
+  const o = match.outcome as Outcome;
+  if (o === "DRAW") return false;
+  const viewerIsA = match.playerAId === viewerId;
+  return (viewerIsA && o === "WIN_A") || (!viewerIsA && o === "WIN_B");
+}
+
 function resultLabel(
   outcome: string,
   viewerIsA: boolean,
@@ -65,6 +72,33 @@ export default async function PlayerProfilePage({
     },
   });
 
+  // Streak + badge stats (computed from confirmed match history)
+  const matchesAsc = [...matches].reverse(); // `matches` is desc by playedAt
+  let current = 0;
+  let longest = 0;
+  let fireEarned = 0; // increments when a streak hits 3 wins
+  let crownEarned = 0; // increments when a streak hits 5 wins
+
+  for (const m of matchesAsc) {
+    if (didWin(m, id)) {
+      current += 1;
+      if (current === 3) fireEarned += 1;
+      if (current === 5) crownEarned += 1;
+      if (current > longest) longest = current;
+    } else {
+      current = 0;
+    }
+  }
+
+  let currentWinStreak = 0;
+  for (const m of matches) {
+    if (!didWin(m, id)) break;
+    currentWinStreak += 1;
+  }
+
+  const confirmedGames = player.matchesPlayed;
+  const winRate = confirmedGames > 0 ? player.wins / confirmedGames : 0;
+
   const rows = matches.map((m) => {
     const viewerIsA = m.playerAId === id;
     const opponent = viewerIsA ? m.playerB : m.playerA;
@@ -82,21 +116,82 @@ export default async function PlayerProfilePage({
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="space-y-4">
         <Link
           href="/"
           className="text-sm text-[var(--muted)] hover:text-[var(--accent)]"
         >
           ← Leaderboard
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">
-          {player.name}
-        </h1>
-        <p className="mt-1 text-sm text-[var(--muted)]">
-          Elo {player.eloRating} · {player.wins}W – {player.losses}L
-          {player.draws > 0 ? ` – ${player.draws}D` : ""} ·{" "}
-          {matches.length} confirmed game{matches.length === 1 ? "" : "s"}
-        </p>
+
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight">
+                {player.name}
+              </h1>
+              <p className="mt-1 text-sm text-[var(--muted)]">
+                Elo{" "}
+                <span className="font-medium text-[var(--foreground)]">
+                  {player.eloRating}
+                </span>{" "}
+                · {player.wins}W – {player.losses}L
+                {player.draws > 0 ? ` – ${player.draws}D` : ""} ·{" "}
+                {matches.length} confirmed game{matches.length === 1 ? "" : "s"}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <div className="rounded-xl border border-[var(--border)] bg-black/20 px-3 py-2">
+                <div className="text-xs text-[var(--muted)]">Trophies</div>
+                <div className="mt-1 flex items-center gap-3 text-sm">
+                  <span className="tabular-nums">
+                    🔥{" "}
+                    <span className="font-medium text-[var(--foreground)]">
+                      {fireEarned}x
+                    </span>
+                  </span>
+                  <span className="tabular-nums">
+                    👑{" "}
+                    <span className="font-medium text-[var(--foreground)]">
+                      {crownEarned}x
+                    </span>
+                  </span>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-[var(--border)] bg-black/20 px-3 py-2">
+                <div className="text-xs text-[var(--muted)]">Streaks</div>
+                <div className="mt-1 flex items-center gap-3 text-sm">
+                  <span className="tabular-nums">
+                    Current{" "}
+                    <span className="font-medium text-[var(--foreground)]">
+                      {currentWinStreak}
+                    </span>
+                  </span>
+                  <span className="tabular-nums">
+                    Longest{" "}
+                    <span className="font-medium text-[var(--foreground)]">
+                      {longest}
+                    </span>
+                  </span>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-[var(--border)] bg-black/20 px-3 py-2">
+                <div className="text-xs text-[var(--muted)]">Win rate</div>
+                <div className="mt-1 text-sm tabular-nums">
+                  <span className="font-medium text-[var(--foreground)]">
+                    {(winRate * 100).toFixed(0)}%
+                  </span>{" "}
+                  <span className="text-[var(--muted)]">
+                    ({player.wins}/{confirmedGames})
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {rows.length === 0 ? (

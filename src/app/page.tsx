@@ -6,11 +6,46 @@ import { DEFAULT_ELO, K_FACTOR } from "@/lib/elo";
 
 export const dynamic = "force-dynamic";
 
+type Outcome = "WIN_A" | "WIN_B" | "DRAW";
+
+async function getCurrentWinStreak(playerId: string, maxLookback = 5) {
+  const recent = await prisma.match.findMany({
+    where: {
+      status: "CONFIRMED",
+      OR: [{ playerAId: playerId }, { playerBId: playerId }],
+    },
+    orderBy: { playedAt: "desc" },
+    take: maxLookback,
+    select: { playerAId: true, playerBId: true, outcome: true },
+  });
+
+  let streak = 0;
+  for (const m of recent) {
+    const o = m.outcome as Outcome;
+    if (o === "DRAW") break;
+    const isA = m.playerAId === playerId;
+    const won = (isA && o === "WIN_A") || (!isA && o === "WIN_B");
+    if (!won) break;
+    streak += 1;
+  }
+  return streak;
+}
+
 export default async function HomePage() {
   const players = await prisma.player.findMany({
     orderBy: [{ eloRating: "desc" }, { name: "asc" }],
     select: playerPublicSelect,
   });
+
+  const badgeById = new Map(
+    await Promise.all(
+      players.map(async (p) => {
+        const streak = await getCurrentWinStreak(p.id, 5);
+        const badge = streak >= 5 ? " 👑" : streak >= 3 ? " 🔥" : "";
+        return [p.id, badge] as const;
+      }),
+    ),
+  );
 
   return (
     <div className="space-y-6">
@@ -60,6 +95,7 @@ export default async function HomePage() {
                       className="text-[var(--accent)] hover:underline"
                     >
                       {p.name}
+                      {badgeById.get(p.id) ?? ""}
                     </Link>
                   </td>
                   <td className="px-4 py-3 tabular-nums">{p.eloRating}</td>
